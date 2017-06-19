@@ -62,7 +62,7 @@ class ObjectTransitionEnv(gym.Env):
             f_x = f_x * (f_sig - self.friction) / f_sig
             f_y = f_y * (f_sig - self.friction) / f_sig
 	
-	print "f_sig={}, f_x={}, f_y={}".format(f_sig,f_x,f_y)
+	#print "f_sig={}, f_x={}, f_y={}".format(f_sig,f_x,f_y)
         v_x = f_x * 4
         v_y = f_y * 4
         position[0] += v_x
