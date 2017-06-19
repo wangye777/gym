@@ -10,6 +10,9 @@ def _isIn(pos, region):
     else:
         return False
 
+def _distance(pos1, pos2):
+    return math.sqrt(math.pow(pos1[0]-pos2[0], 2) + math.pow(pos1[1]-pos2[1], 2))
+
 class ObjectTransitionEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -50,9 +53,8 @@ class ObjectTransitionEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _step(self, action):
-        #x = self.state[0]
-        #y = self.state[1]
+    def _step(self, raw_action):
+	action = np.clip(raw_action, self.min_f, self.max_f)
         position = [self.state[0], self.state[1]]
         f_x = action[0] + action[2]
         f_y = action[1] + action[3]
@@ -62,7 +64,7 @@ class ObjectTransitionEnv(gym.Env):
             f_x = f_x * (f_sig - self.friction) / f_sig
             f_y = f_y * (f_sig - self.friction) / f_sig
 	
-	#print "f_sig={}, f_x={}, f_y={}".format(f_sig,f_x,f_y)
+	
         v_x = f_x * 4
         v_y = f_y * 4
         position[0] += v_x
@@ -81,12 +83,20 @@ class ObjectTransitionEnv(gym.Env):
         if (position[1] > self.region[3]): position[1] = self.region[3]        
 
         done = is_in_goal or is_in_obstacles
+	
+	goal_x = (self.goal[0]+self.goal[1])/2
+	goal_y = (self.goal[1]+self.goal[3])/2
+	dist1 = _distance([self.state[0],self.state[1]], [goal_x, goal_y])
+	dist2 = _distance(position, [goal_x, goal_y])
 
         reward = 0
         if is_in_goal:
-            reward += 1.0
+            reward += 100.0
         if is_in_obstacles:
-            reward -= 1.0
+            reward -= 100.0
+	reward += np.sign(dist1 - dist2)
+	#if reward == 0.0: reward = -1
+ 	#print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
 
         self.state = np.array(position)
         return self.state, reward, done, {}
