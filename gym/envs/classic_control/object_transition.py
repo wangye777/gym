@@ -5,8 +5,7 @@ from gym.utils import seeding
 import numpy as np
 
 def _isIn(pos, region):
-    if pos[0] >= region[0] and pos[0] <= region[1] and\
-        pos[1] >= region[2] and pos[1] <= region[3]:
+    if pos[0] >= region[0] and pos[0] <= region[1] and pos[1] >= region[2] and pos[1] <= region[3]:
         return True
     else:
         return False
@@ -18,8 +17,8 @@ class ObjectTransitionEnv(gym.Env):
     }
 
     def __init__(self):
-        self.min_f = -2.0
-        self.max_f = 2.0
+        self.min_f = -1.0
+        self.max_f = 1.0
         self.region = [0, 80, 0, 40]
         # self.min_x = 0
         # self.max_x = 80
@@ -31,7 +30,7 @@ class ObjectTransitionEnv(gym.Env):
         
         self.goal = [64, 70, 17, 23]
 
-        self.friction = 1.0
+        self.friction = 0.8
 
         self.low_state = np.array([self.region[0], self.region[2]])
         self.high_state = np.array([self.region[1], self.region[3]])
@@ -57,14 +56,15 @@ class ObjectTransitionEnv(gym.Env):
         position = [self.state[0], self.state[1]]
         f_x = action[0] + action[2]
         f_y = action[1] + action[3]
-        v_x = 0
-        v_y = 0
-
         f_sig = math.sqrt(math.pow(f_x, 2) + math.pow(f_x, 2))
+	
         if f_sig > self.friction:
-            v_x = v_x * (f_sig - self.friction) / f_sig
-            v_y = v_y * (f_sig - self.friction) / f_sig
-
+            f_x = f_x * (f_sig - self.friction) / f_sig
+            f_y = f_y * (f_sig - self.friction) / f_sig
+	
+	print "f_sig={}, f_x={}, f_y={}".format(f_sig,f_x,f_y)
+        v_x = f_x * 4
+        v_y = f_y * 4
         position[0] += v_x
         position[1] += v_y
 
@@ -93,6 +93,7 @@ class ObjectTransitionEnv(gym.Env):
 
     def _reset(self):
         self.state = np.array([self.np_random.uniform(low=0, high=20), self.np_random.uniform(low=0, high=40)])
+	#self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
         return np.array(self.state)
 
 #    def get_state(self):
@@ -108,7 +109,7 @@ class ObjectTransitionEnv(gym.Env):
         screen_width = 800
         screen_height = 400
 
-        world_width = self.region[1] - self.region[10]
+        world_width = self.region[1] - self.region[0]
         scale = screen_width/world_width
         objwidth=40
         objheight=40
@@ -133,10 +134,10 @@ class ObjectTransitionEnv(gym.Env):
                 self.viewer.add_geom(render_obt)
                 self.render_obts.append(render_obt)
 
-            l,r,t,b = self.region[0]*scale, self.region[1]*scale, self.region[2]*scale, self.region[3]*scale
-            self.goal = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
-            self.goal.set_color(0,255,0)
-            self.viewer.add_geom(self.goal)
+            l,r,t,b = self.goal[0]*scale, self.goal[1]*scale, self.goal[2]*scale, self.goal[3]*scale
+            self.goal_reg = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
+            self.goal_reg.set_color(0,255,0)
+            self.viewer.add_geom(self.goal_reg)
 
         self.objtrans.set_translation(self.state[0]*scale, self.state[1]*scale)
 
