@@ -13,7 +13,7 @@ def _isIn(pos, region):
 def _distance(pos1, pos2):
     return math.sqrt(math.pow(pos1[0]-pos2[0], 2) + math.pow(pos1[1]-pos2[1], 2))
 
-class ObjectTransitionEnv(gym.Env):
+class ObjectTransitionV1Env(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 30
@@ -47,7 +47,7 @@ class ObjectTransitionEnv(gym.Env):
         self.action_space = spaces.Box(self.min_action, self.max_action)
 
         self._seed()
-        self._reset()
+        self.reset()
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -57,17 +57,17 @@ class ObjectTransitionEnv(gym.Env):
         self.state = np.array(state)
 
     def _step(self, raw_action):
-        action = np.clip(raw_action, self.min_f, self.max_f)
+	action = np.clip(raw_action, self.min_f, self.max_f)
         position = [self.state[0], self.state[1]]
         f_x = action[0] + action[2]
         f_y = action[1] + action[3]
         f_sig = math.sqrt(math.pow(f_x, 2) + math.pow(f_x, 2))
-    
+	
         if f_sig > self.friction:
             f_x = f_x * (f_sig - self.friction) / f_sig
             f_y = f_y * (f_sig - self.friction) / f_sig
-    
-    
+	
+	
         v_x = f_x * 4
         v_y = f_y * 4
         position[0] += v_x
@@ -86,31 +86,28 @@ class ObjectTransitionEnv(gym.Env):
         if (position[1] > self.region[3]): position[1] = self.region[3]        
 
         done = is_in_goal or is_in_obstacles
-    
-        goal_x = (self.goal[0]+self.goal[1])/2
-        goal_y = (self.goal[1]+self.goal[3])/2
-        dist1 = _distance([self.state[0],self.state[1]], [goal_x, goal_y])
-        dist2 = _distance(position, [goal_x, goal_y])
+	
+	goal_x = (self.goal[0]+self.goal[1])/2
+	goal_y = (self.goal[1]+self.goal[3])/2
+	dist1 = _distance([self.state[0],self.state[1]], [goal_x, goal_y])
+	dist2 = _distance(position, [goal_x, goal_y])
 
         reward = 0
         if is_in_goal:
             reward += 100.0
         if is_in_obstacles:
             reward -= 100.0
-        reward += np.sign(dist1 - dist2)
-        #if reward == 0.0: reward = -1
-        #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
+	reward += np.sign(dist1 - dist2)
+	#if reward == 0.0: reward = -1
+ 	#print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
 
         self.state = np.array(position)
         return self.state, reward, done, {}
 
     def _reset(self):
         self.state = np.array([self.np_random.uniform(low=0, high=20), self.np_random.uniform(low=0, high=40)])
-        #self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
+	#self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
         return np.array(self.state)
-
-    def _set_state(self, init_state):
-        self.state = np.array(init_state)
 
     def get_state(self):
         return self.state
