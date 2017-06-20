@@ -72,7 +72,8 @@ class Env(object):
     def _step(self, action): raise NotImplementedError
     def _reset(self): raise NotImplementedError
     def _render(self, mode='human', close=False): return
-    def _seed(self, seed=None): return []
+    def _seed(self, seed=None): return []    
+    def _configure(self, info): raise NotImplementedError
 
     # Do not override
     _owns_render = True
@@ -208,8 +209,12 @@ class Env(object):
         else:
             return '<{}<{}>>'.format(type(self).__name__, self.spec.id)
 
-    def configure(self, *args, **kwargs):
-        raise error.Error("Env.configure has been removed in gym v0.8.0, released on 2017/03/05. If you need Env.configure, please use gym version 0.7.x from pip, or checkout the `gym:v0.7.4` tag from git.")
+    #def configure(self, *args, **kwargs):
+        #raise error.Error("Env.configure has been removed in gym v0.8.0, released on 2017/03/05. If you need Env.configure, please use gym version 0.7.x from pip, or checkout the `gym:v0.7.4` tag from git.")
+        #return self._configure(*args, **kwargs)
+    def configure(self, info):
+        return self._configure(info)
+
 
 # Space-related abstractions
 
@@ -284,6 +289,9 @@ class Wrapper(Env):
 
     def _render(self, mode='human', close=False):
         return self.env.render(mode, close)
+
+    def _configure(self, info):
+        return self.env.configure(info)
 
     def _close(self):
         return self.env.close()

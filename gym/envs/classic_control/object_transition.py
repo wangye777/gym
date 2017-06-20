@@ -115,6 +115,9 @@ class ObjectTransitionEnv(gym.Env):
     def get_state(self):
         return self.state
 
+    def _configure(self, info):
+        self._set_state(info['state'])
+
     def _render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
