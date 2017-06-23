@@ -105,7 +105,7 @@ class ObjectTransitionEnv(gym.Env):
         return self.state, reward, done, {}
 
     def _reset(self):
-        self.state = np.array([self.np_random.uniform(low=0, high=20), self.np_random.uniform(low=0, high=40)])
+        self.state = np.array([self.np_random.uniform(low=0, high=30), self.np_random.uniform(low=0, high=40)])
         #self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
         return np.array(self.state)
 
