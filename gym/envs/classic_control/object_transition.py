@@ -102,7 +102,7 @@ class ObjectTransitionEnv(gym.Env):
         #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
 
         self.state = np.array(position)
-        return self.state, reward, done, {}
+        return self.state, reward, done, {"done":done}
 
     def _reset(self):
         self.state = np.array([self.np_random.uniform(low=0, high=30), self.np_random.uniform(low=0, high=40)])
@@ -112,7 +112,7 @@ class ObjectTransitionEnv(gym.Env):
     def _set_state(self, init_state):
         self.state = np.array(init_state)
 
-    def get_state(self):
+    def _get_state(self):
         return self.state
 
     def _configure(self, info):

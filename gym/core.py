@@ -94,7 +94,9 @@ class Env(object):
             done (boolean): whether the episode has ended, in which case further step() calls will return undefined results
             info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
         """
-        return self._step(action)
+        next_state,reward,done,info = self._step(action)
+        # print("xxxxx next_state=",next_state," reward = ",reward, "done = ",done)
+        return (next_state,reward,done,info)
 
     def reset(self):
         """Resets the state of the environment and returns an initial observation.
