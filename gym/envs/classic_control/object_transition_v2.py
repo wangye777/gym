@@ -77,6 +77,7 @@ class ObjectTransitionV2Env(gym.Env):
         action = np.clip(raw_action, self.min_action, self.max_action)
         self.action = action
         position = [self.state[0], self.state[2]]
+        #print("position=",position)
         velocity = [self.state[1], self.state[3]]
 
         ##### calculate the sum force from the robots
@@ -102,7 +103,7 @@ class ObjectTransitionV2Env(gym.Env):
             fsum_x = f_x + friction_x # sum force by combining robot forces and friction
             fsum_y = f_y + friction_y   
             velocity[0] = velocity[0] + fsum_x / self.mass * self.dT
-            velocity[1] = velocity[1] + fsum_y / self.mass * self.dT         
+            velocity[1] = velocity[1] + fsum_y / self.mass * self.dT
         else:
             # in all other cases, friction has the opposite direction to the velocity
             friction_x = - self.friction * velocity[0] / _norm(velocity) # friction force has negative direction w.r.t. object velocity
@@ -209,12 +210,12 @@ class ObjectTransitionV2Env(gym.Env):
             self.imgtrans_list = []
             for id in xrange(self.agent_num):
                 img = rendering.Image(fname, 40., 80.)
-                print("img={}".format(img))
+                #print("img={}".format(img))
                 imgtrans = rendering.Transform()
                 img.add_attr(imgtrans)
                 self.img_list.append(img)
                 self.imgtrans_list.append(imgtrans)
-            print("self.img_list={}, self.imgtrans_list={}".format(self.img_list,self.imgtrans_list))
+            #print("self.img_list={}, self.imgtrans_list={}".format(self.img_list,self.imgtrans_list))
 
 
         self.scales = []
@@ -225,11 +226,11 @@ class ObjectTransitionV2Env(gym.Env):
         
         for id in xrange(self.agent_num):
             self.viewer.add_onetime(self.img_list[id])
-            self.imgtrans_list[id].set_translation(self.state[0]*scale, self.state[1]*scale) #follow object
+            self.imgtrans_list[id].set_translation(self.state[0]*scale, self.state[2]*scale) #follow object
             self.imgtrans_list[id].set_translation(100+80*id, 200) #different position for different agents
             self.imgtrans_list[id].set_rotation(self.rotations[id]) # rotation
             self.imgtrans_list[id].scale = (self.scales[id],self.scales[id])
         
-        self.objtrans.set_translation(self.state[0]*scale, self.state[1]*scale)
+        self.objtrans.set_translation(self.state[0]*scale, self.state[2]*scale)
         
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
