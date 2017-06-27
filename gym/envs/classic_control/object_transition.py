@@ -101,12 +101,13 @@ class ObjectTransitionEnv(gym.Env):
         dist1 = _distance([self.state[0],self.state[1]], [goal_x, goal_y])
         dist2 = _distance(position, [goal_x, goal_y])
 
-        reward = 0
+        reward = -1
         if is_in_goal:
             reward += 100.0
         if is_in_obstacles:
             reward -= 100.0
-        reward += np.sign(dist1 - dist2)
+        if dist1 - dist2 < 0: reward -= 1
+        #reward += np.sign(dist1 - dist2)
         #if reward == 0.0: reward = -1
         #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
 
