@@ -72,6 +72,9 @@ class ObjectTransitionEnv(gym.Env):
         if f_sig > self.friction:
             f_x = f_x * (f_sig - self.friction) / f_sig
             f_y = f_y * (f_sig - self.friction) / f_sig
+        else:
+            f_x = 0.0
+            f_y = 0.0
     
     
         v_x = f_x * 4
