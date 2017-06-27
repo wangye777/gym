@@ -73,7 +73,7 @@ class ObjectTransitionV2Env(gym.Env):
 
     def _step(self, raw_action):
         # raw_action = [f1_mag, f1_theta, f2_mag, f2_theta, ...]
-        print self.state
+        #print self.state
         action = np.clip(raw_action, self.min_action, self.max_action)
         self.action = action
         position = [self.state[0], self.state[2]]
@@ -204,7 +204,6 @@ class ObjectTransitionV2Env(gym.Env):
             self.goal_reg.set_color(0,255,0)
             self.viewer.add_geom(self.goal_reg)
 
-            '''
             fname = path.join(path.dirname(__file__), "assets/arrow.png")
             self.img_list = []
             self.imgtrans_list = []
@@ -216,21 +215,13 @@ class ObjectTransitionV2Env(gym.Env):
                 self.img_list.append(img)
                 self.imgtrans_list.append(imgtrans)
             print("self.img_list={}, self.imgtrans_list={}".format(self.img_list,self.imgtrans_list))
-            '''
 
-        self.objtrans.set_translation(self.state[0]*scale, self.state[1]*scale)
 
-        '''
         self.scales = []
         self.rotations = []
         for id in xrange(self.agent_num):
-            self.scales.append(np.abs(self.action[id]))
-            if id % 2 == 0:
-                if self.action[id] >= 0: self.rotations.append(-math.pi/2) #anti-clockwise
-                else: self.rotations.append(math.pi/2)
-            else:
-                if self.action[id] >= 0: self.rotations.append(0)
-                else: self.rotations.append(math.pi)
+            self.scales.append(np.abs(self.action[id*2]))
+            self.rotations.append(self.action[id*2+1]-math.pi/2) #anti-clockwise
         
         for id in xrange(self.agent_num):
             self.viewer.add_onetime(self.img_list[id])
@@ -238,6 +229,7 @@ class ObjectTransitionV2Env(gym.Env):
             self.imgtrans_list[id].set_translation(100+80*id, 200) #different position for different agents
             self.imgtrans_list[id].set_rotation(self.rotations[id]) # rotation
             self.imgtrans_list[id].scale = (self.scales[id],self.scales[id])
-        '''
+        
+        self.objtrans.set_translation(self.state[0]*scale, self.state[1]*scale)
         
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
