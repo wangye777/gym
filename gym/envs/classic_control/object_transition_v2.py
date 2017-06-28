@@ -34,14 +34,20 @@ class ObjectTransitionV2Env(gym.Env):
         self.max_fmag = 1.0
         self.min_fdir = 0.0
         self.max_fdir = 2*math.pi - 0.01
-
-        self.region = [0, 80, 0, 40]
         self.max_vel = 10.0 # max velocity of the object
 
+        # # size
+        # self.region = [0, 80, 0, 40] # l,r,b,u
+        # self.obstacles = []
+        # #self.obstacles.append([40, 50, 15, 25])
+        # self.goal = [64, 70, 17, 23]
+
+        # size
+        self.region = [0, 60, 0, 40] # l,r,b,u
         self.obstacles = []
         #self.obstacles.append([40, 50, 15, 25])
-        
-        self.goal = [64, 70, 17, 23]
+        self.goal = [30, 50, 10, 30]
+
 
         self.friction = 0.8
         self.mass = 1.0 # mass of the object
@@ -174,8 +180,10 @@ class ObjectTransitionV2Env(gym.Env):
                 self.viewer = None
             return
 
-        screen_width = 800
-        screen_height = 400
+        scale = 10
+        
+        screen_width = (self.region[1] - self.region[0]) * scale
+        screen_height = (self.region[3] - self.region[2]) * scale
 
         world_width = self.region[1] - self.region[0]
         scale = screen_width/world_width
@@ -187,12 +195,6 @@ class ObjectTransitionV2Env(gym.Env):
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
             self.objtrans = rendering.Transform()
-
-            l,r,t,b = -objwidth/2, objwidth/2, -objheight/2, objheight/2
-            self.obj = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])            
-            self.obj.add_attr(self.objtrans)
-            self.obj.set_color(255,0,0)
-            self.viewer.add_geom(self.obj)
 
             self.render_obsts = []
             for obstacle in self.obstacles:
@@ -211,7 +213,7 @@ class ObjectTransitionV2Env(gym.Env):
             self.img_list = []
             self.imgtrans_list = []
             for id in xrange(self.agent_num):
-                img = rendering.Image(fname, 40., 80.)
+                img = rendering.Image(fname, 20., 40.)
                 #print("img={}".format(img))
                 imgtrans = rendering.Transform()
                 img.add_attr(imgtrans)
@@ -219,17 +221,25 @@ class ObjectTransitionV2Env(gym.Env):
                 self.imgtrans_list.append(imgtrans)
             #print("self.img_list={}, self.imgtrans_list={}".format(self.img_list,self.imgtrans_list))
 
+            l,r,t,b = -objwidth/2, objwidth/2, -objheight/2, objheight/2
+            self.obj = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])            
+            self.obj.add_attr(self.objtrans)
+            self.obj.set_color(255,0,0)
+            self.viewer.add_geom(self.obj)
 
         self.scales = []
         self.rotations = []
         for id in xrange(self.agent_num):
             self.scales.append(np.abs(self.action[id*2]))
             self.rotations.append(self.action[id*2+1]-math.pi/2) #anti-clockwise
+        self.arrow_offsets = [[30,0],[0,-30],[-30,0],[0,30]] * scale
         
         for id in xrange(self.agent_num):
             self.viewer.add_onetime(self.img_list[id])
-            self.imgtrans_list[id].set_translation(self.state[0]*scale, self.state[2]*scale) #follow object
-            self.imgtrans_list[id].set_translation(100+80*id, 200) #different position for different agents
+            # self.imgtrans_list[id].set_translation(self.state[0]*scale+self.arrow_offsets[id][0],\
+            #     self.state[2]*scale+self.arrow_offsets[id][1]) #follow object #arrow vis V1
+            #self.imgtrans_list[id].set_translation(self.state[0]*scale,self.state[2]*scale) #arrow vis V2, follow object
+            self.imgtrans_list[id].set_translation(100+60*id, 200) #arrow vis V3, fixed position
             self.imgtrans_list[id].set_rotation(self.rotations[id]) # rotation
             self.imgtrans_list[id].scale = (self.scales[id],self.scales[id])
         
