@@ -236,10 +236,10 @@ class ObjectTransitionV2Env(gym.Env):
         
         for id in xrange(self.agent_num):
             self.viewer.add_onetime(self.img_list[id])
-            # self.imgtrans_list[id].set_translation(self.state[0]*scale+self.arrow_offsets[id][0],\
-            #     self.state[2]*scale+self.arrow_offsets[id][1]) #follow object #arrow vis V1
+            self.imgtrans_list[id].set_translation(self.state[0]*scale+self.arrow_offsets[id][0],\
+                self.state[2]*scale+self.arrow_offsets[id][1]) #follow object #arrow vis V1
             #self.imgtrans_list[id].set_translation(self.state[0]*scale,self.state[2]*scale) #arrow vis V2, follow object
-            self.imgtrans_list[id].set_translation(100+60*id, 200) #arrow vis V3, fixed position
+            #self.imgtrans_list[id].set_translation(100+60*id, 200) #arrow vis V3, fixed position
             self.imgtrans_list[id].set_rotation(self.rotations[id]) # rotation
             self.imgtrans_list[id].scale = (self.scales[id],self.scales[id])
         
