@@ -39,7 +39,7 @@ class ObjectTransitionV2Env(gym.Env):
         self.max_vel = 10.0 # max velocity of the object
 
         self.obstacles = []
-        self.obstacles.append([40, 50, 15, 25])
+        #self.obstacles.append([40, 50, 15, 25])
         
         self.goal = [64, 70, 17, 23]
 
@@ -128,21 +128,23 @@ class ObjectTransitionV2Env(gym.Env):
         if (position[1] < self.region[2]): position[1] = self.region[2]
         if (position[1] > self.region[3]): position[1] = self.region[3]        
 
-        done = (is_in_goal and _norm(velocity) < 0.01) or is_in_obstacles
+        done = (is_in_goal and _norm(velocity) < 0.5) or is_in_obstacles
     
         goal_x = (self.goal[0]+self.goal[1])/2
         goal_y = (self.goal[1]+self.goal[3])/2
-        dist1 = _distance([self.state[0],self.state[1]], [goal_x, goal_y])
+        dist1 = _distance([self.state[0],self.state[2]], [goal_x, goal_y])
         dist2 = _distance(position, [goal_x, goal_y])
 
         #reward = 0
         reward = -1
         if is_in_goal:
-            reward += 100.0
+            reward += 2.0
         if is_in_obstacles:
             reward -= 100.0
+        if done and (not is_in_obstacles):
+            reward += 100
         #reward += np.sign(dist1 - dist2)
-        if dist1 - dist2 < 0: reward -= 1
+        if dist1 - dist2 <= 0.05: reward -= 1
 
         #if reward == 0.0: reward = -1
         #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))

@@ -95,7 +95,7 @@ class Env(object):
             info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
         """
         next_state,reward,done,info = self._step(action)
-        # print("xxxxx next_state=",next_state," reward = ",reward, "done = ",done)
+        #print("GYM COre2: next_state=",next_state," reward = ",reward, "action = ", action,  "done = ",done)
         return (next_state,reward,done,info)
 
     def reset(self):

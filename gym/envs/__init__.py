@@ -107,8 +107,7 @@ register(
 register(
     id='ObjectTransition-v2',
     entry_point='gym.envs.classic_control:ObjectTransitionV2Env',
-    max_episode_steps=500,
-    reward_threshold=500.0,
+    max_episode_steps=300,
 )
 
 # Box2d
