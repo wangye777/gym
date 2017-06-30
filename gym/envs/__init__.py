@@ -99,7 +99,7 @@ register(
 register(
     id='ObjectTransition-v1',
     entry_point='gym.envs.classic_control:ObjectTransitionV1Env',
-    max_episode_steps=300,
+    max_episode_steps=500,
 )
 
 register(

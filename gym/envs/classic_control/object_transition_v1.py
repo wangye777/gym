@@ -39,7 +39,7 @@ class ObjectTransitionV1Env(gym.Env):
         # size
         self.region = [0, 80, 0, 40] # l,r,b,u
         self.obstacles = []
-        self.obstacles.append([40, 50, 15, 25])
+        #self.obstacles.append([40, 50, 15, 25])
         self.goal = [60, 70, 15, 25]
 
         # # size
