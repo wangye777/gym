@@ -137,7 +137,7 @@ class ObjectTransitionV2Env(gym.Env):
         done = (is_in_goal and _norm(velocity) < 0.5) or is_in_obstacles
     
         goal_x = (self.goal[0]+self.goal[1])/2
-        goal_y = (self.goal[1]+self.goal[3])/2
+        goal_y = (self.goal[2]+self.goal[3])/2
         dist1 = _distance([self.state[0],self.state[2]], [goal_x, goal_y])
         dist2 = _distance(position, [goal_x, goal_y])
 
