@@ -93,7 +93,7 @@ class ObjectTransitionV1Env(gym.Env):
             f_x += action[2*i] * math.cos(action[2*i+1])
             f_y += action[2*i] * math.sin(action[2*i+1])
 
-        f_sig = math.sqrt(math.pow(f_x, 2) + math.pow(f_x, 2)) # magnitude of the robot force
+        f_sig = math.sqrt(math.pow(f_x, 2) + math.pow(f_y, 2)) # magnitude of the robot force
 
         ##### deal with planar object dynamics
         if ( (f_sig <= self.friction) and (_norm(velocity) <= 0.1) ):
@@ -108,6 +108,7 @@ class ObjectTransitionV1Env(gym.Env):
             friction_y = - self.friction * f_y / _norm(np.array([f_x, f_y]))
             fsum_x = f_x + friction_x # sum force by combining robot forces and friction
             fsum_y = f_y + friction_y   
+            #print("not moving fsum_x={} fsum_y={}".format(fsum_x,fsum_y))
             velocity[0] = velocity[0] + fsum_x / self.mass * self.dT
             velocity[1] = velocity[1] + fsum_y / self.mass * self.dT
         else:
@@ -116,6 +117,7 @@ class ObjectTransitionV1Env(gym.Env):
             friction_y = - self.friction * velocity[1] / _norm(velocity)
             fsum_x = f_x + friction_x # sum force by combining robot forces and friction
             fsum_y = f_y + friction_y
+            #print("moving fsum_x={} fsum_y={}".format(fsum_x,fsum_y))
             velocity[0] = velocity[0] + fsum_x / self.mass * self.dT
             velocity[1] = velocity[1] + fsum_y / self.mass * self.dT
         position[0] = position[0] + velocity[0] * self.dT

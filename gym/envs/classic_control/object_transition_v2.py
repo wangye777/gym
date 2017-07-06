@@ -36,17 +36,17 @@ class ObjectTransitionV2Env(gym.Env):
         self.max_fdir = 2*math.pi - 0.01
         self.max_vel = 10.0 # max velocity of the object
 
+        # # size
+        # self.region = [0, 80, 0, 40] # l,r,b,u
+        # self.obstacles = []
+        # #self.obstacles.append([40, 50, 15, 25])
+        # self.goal = [60, 70, 15, 25]
+
         # size
-        self.region = [0, 80, 0, 40] # l,r,b,u
+        self.region = [0, 60, 0, 40] # l,r,b,u
         self.obstacles = []
         #self.obstacles.append([40, 50, 15, 25])
-        self.goal = [60, 70, 15, 25]
-
-#         # size
-#         self.region = [0, 60, 0, 40] # l,r,b,u
-#         self.obstacles = []
-#         #self.obstacles.append([40, 50, 15, 25])
-#         self.goal = [30, 50, 10, 30]
+        self.goal = [30, 50, 10, 30]
 
 
         self.friction = 0.8
