@@ -172,6 +172,7 @@ class ObjectTransitionV3Env(gym.Env):
             if _isInCircle(position, obstacle) is True:
                 is_in_obstacles = True
                 break
+        if is_in_goal: is_in_obstacles = False
 
         if (position[0] < self.region[0]): position[0] = self.region[0]
         if (position[0] > self.region[1]): position[0] = self.region[1]
