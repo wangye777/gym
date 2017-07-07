@@ -103,7 +103,7 @@ class ObjectTransitionV3Env(gym.Env):
         self.obstacles = []
         for i in xrange(self.num_obsts):
             obst = np.array([self.np_random.uniform(low=self.obst_reg[0], high=self.obst_reg[1]), \
-                self.np_random.uniform(low=self.obst_reg[2]+self.obst_rad, high=self.obst_reg[3]-self.obst_rad), self.obst_rad])
+                self.np_random.uniform(low=self.obst_reg[2], high=self.obst_reg[3]), self.obst_rad])
             self.obstacles.append(obst)
             self.state = np.append(self.state, obst)
         
