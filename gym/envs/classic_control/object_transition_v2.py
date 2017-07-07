@@ -30,7 +30,7 @@ class ObjectTransitionV2Env(gym.Env):
 
         #self.min_f = -1.0
         #self.max_f = 1.0
-        self.min_fmag = -1.0
+        self.min_fmag = 0
         self.max_fmag = 1.0
         self.min_fdir = 0.0
         self.max_fdir = 2*math.pi - 0.01

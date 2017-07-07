@@ -30,7 +30,7 @@ class ObjectTransitionV1Env(gym.Env):
 
         #self.min_f = -1.0
         #self.max_f = 1.0
-        self.min_fmag = -1.0
+        self.min_fmag = 0
         self.max_fmag = 1.0
         self.min_fdir = 0.0
         self.max_fdir = 2*math.pi - 0.01
@@ -38,9 +38,10 @@ class ObjectTransitionV1Env(gym.Env):
 
         # size
         self.region = [0, 80, 0, 40] # l,r,b,u
-        self.obstacles = []
-        #self.obstacles.append([40, 50, 15, 25])
         self.goal = [60, 70, 15, 25]
+        self.obstacles = []
+        self.obstacles.append([40, 50, 15, 25])
+        
 
         # # size
         # self.region = [0, 60, 0, 40] # l,r,b,u
