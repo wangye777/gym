@@ -6,3 +6,5 @@ from gym.envs.classic_control.acrobot import AcrobotEnv
 from gym.envs.classic_control.object_transition import ObjectTransitionEnv
 from gym.envs.classic_control.object_transition_v1 import ObjectTransitionV1Env
 from gym.envs.classic_control.object_transition_v2 import ObjectTransitionV2Env
+from gym.envs.classic_control.object_transition_v3 import ObjectTransitionV3Env
+from gym.envs.classic_control.object_transition_v4 import ObjectTransitionV4Env
