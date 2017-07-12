@@ -36,18 +36,23 @@ class ObjectTransitionV1Env(gym.Env):
         self.max_fdir = 2*math.pi - 0.01
         self.max_vel = 10.0 # max velocity of the object
 
-        # size
-        self.region = [0, 80, 0, 40] # l,r,b,u
-        self.goal = [60, 70, 15, 25]
-        self.obstacles = []
-        self.obstacles.append([40, 50, 15, 25])
-        
-
         # # size
-        # self.region = [0, 60, 0, 40] # l,r,b,u
+        # self.region = [0, 80, 0, 40] # l,r,b,u
+        # self.pos_reg = [0, 30, 0, 40]
+        # self.goal = [60, 70, 15, 25]
         # self.obstacles = []
-        # #self.obstacles.append([40, 50, 15, 25])
-        # self.goal = [30, 50, 10, 30]
+        # self.obstacles.append([40, 50, 15, 25])
+
+
+        # size
+        self.region = [0, 80/2, 0, 40/2] # l,r,b,u
+        self.goal = [60/2, 70/2, 15/2, 25/2]
+        # self.pos_reg = [0, 30/2, 0, 40/2]
+        self.pos_reg = [0, 80/2, 0, 40/2]
+        # self.pos_reg = [40/2+1, 40/2+1, 15/2+1, 15/2+1]
+        self.obstacles = []
+        self.obstacles.append([40/2, 50/2, 15/2, 25/2])
+
 
 
         self.friction = 0.8
@@ -144,16 +149,28 @@ class ObjectTransitionV1Env(gym.Env):
         dist1 = _distance([self.state[0],self.state[2]], [goal_x, goal_y])
         dist2 = _distance(position, [goal_x, goal_y])
 
-        #reward = 0
         reward = -1
         if is_in_goal:
             reward += 2.0
         if is_in_obstacles:
             reward -= 100.0
         if done and (not is_in_obstacles):
-            reward += 100
+            reward += 100.0
         #reward += np.sign(dist1 - dist2)
-        if dist1 - dist2 <= 0.05: reward -= 1
+        if dist1 - dist2 <= 0.01: reward -= 1
+
+
+        # reward = -1 #-1
+        # if is_in_goal:
+        #     reward += 10.0
+        # if is_in_obstacles:
+        #     reward -= 200.0
+        # if done and (not is_in_obstacles):
+        #     reward += 200.0
+        # #reward += np.sign(dist1 - dist2)
+        # if dist1 - dist2 >= 0.01: reward += 2
+        # if dist1 - dist2 >= 0.1: reward += 1
+
 
         #if reward == 0.0: reward = -1
         #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
@@ -164,7 +181,7 @@ class ObjectTransitionV1Env(gym.Env):
     def _reset(self):
         #self.state = np.array([self.np_random.uniform(low=0, high=30), self.np_random.uniform(low=0, high=40)])
         #self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
-        self.state = np.array([self.np_random.uniform(low=0, high=30), 0.0, self.np_random.uniform(low=0, high=40), 0.0])
+        self.state = np.array([self.np_random.uniform(low=self.pos_reg[0], high=self.pos_reg[1]), 0.0, self.np_random.uniform(low=self.pos_reg[2], high=self.pos_reg[3]), 0.0])
         return np.array(self.state)
 
     def _set_state(self, init_state):
