@@ -182,7 +182,7 @@ class ObjectTransitionV4Env(gym.Env):
         if (position[1] < self.region[2]): position[1] = self.region[2]
         if (position[1] > self.region[3]): position[1] = self.region[3]        
 
-        done = (is_in_goal and _norm(velocity) < 0.5) or is_in_obstacles
+        done = (is_in_goal and _norm(velocity) < 0.5)# or is_in_obstacles
     
         goal_x = self.goal[0]
         goal_y = self.goal[1]
@@ -194,9 +194,9 @@ class ObjectTransitionV4Env(gym.Env):
         if is_in_goal:
             reward += 2.0
         if is_in_obstacles:
-            reward -= 100.0
+            reward = 10.0
         if done and (not is_in_obstacles):
-            reward += 100
+            reward = 30
         
         if dist1 - dist2 <= 0.05: reward -= 1 #dese reward
 

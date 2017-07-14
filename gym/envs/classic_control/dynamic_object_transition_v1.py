@@ -13,13 +13,19 @@ def _isIn(pos, region):
     else:
         return False
 
+def _isInCircle(pos, circle):
+    if _distance(pos, [circle[0],circle[1]]) <= circle[2]:
+        return True
+    else:
+        return False
+
 def _distance(pos1, pos2):
     return math.sqrt(math.pow(pos1[0]-pos2[0], 2) + math.pow(pos1[1]-pos2[1], 2))
 
 def _norm(vec):
     return np.linalg.norm(vec,2)
 
-class ObjectTransitionV3Env(gym.Env):
+class DynamicObjectTransitionV1Env(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 30
@@ -37,29 +43,35 @@ class ObjectTransitionV3Env(gym.Env):
         self.max_vel = 10.0 # max velocity of the object
 
         # # size
-        # self.region = [0, 80, 0, 40] # l,r,b,u
-        # self.pos_reg = [0, 30, 0, 40]
-        # self.goal = [60, 70, 15, 25]
-        # self.obstacles = []
-        # self.obstacles.append([40, 50, 15, 25])
+        # self.region = [0, 100, 0, 60] # l,r,b,u
+        # self.pos_reg = [0, 20, 0, 60]
+        # self.goal_reg = [60, 100, 0, 60]
+        # self.goal_rad = 10
+        # self.num_obsts = 4
+        # self.obst_reg = [30, 60, 0, 60]
+        # self.obst_rad = 6
 
 
         # size
-        self.region = [0, 80/2, 0, 40/2] # l,r,b,u
-        self.goal = [60/2, 70/2, 15/2, 25/2]
-        # self.pos_reg = [0, 30/2, 0, 40/2]
-        self.pos_reg = [0, 80/2, 0, 40/2]
-        # self.pos_reg = [40/2-20, 40/2+1, 20/2+1, 20/2+1]
-        self.obstacles = []
-        self.obstacles.append([40/2, 50/2, 15/2, 25/2])
-
+        self.region = [0, 100/2, 0, 60/2] # l,r,b,u
+        self.pos_reg = [0, 20/2, 0, 60/2]
+        self.goal_reg = [60/2, 100/2, 0, 60/2]
+        self.goal_rad = 10/2
+        self.num_obsts = 4
+        self.obst_reg = [30/2, 60/2, 0, 60/2]
+        self.obst_rad = 6/2
 
 
         self.friction = 0.8
         self.mass = 1.0 # mass of the object
 
-        self.low_state = np.array([self.region[0], -self.max_vel, self.region[2], -self.max_vel]) # (pos_x, vel_x, pos_y, vel_y) 
-        self.high_state = np.array([self.region[1], self.max_vel, self.region[3], self.max_vel])
+        # (pos_x, vel_x, pos_y, vel_y, goal_x, goal_y, goal_rad, obst_x1, obst_y1, obst_rad1)
+        self.low_state = np.array([self.region[0], self.region[2], -self.max_vel, -self.max_vel, self.goal_reg[0], self.goal_reg[2], self.goal_rad])
+        for i in xrange(self.num_obsts):
+            self.low_state = np.append(self.low_state, np.array([self.obst_reg[0], self.obst_reg[2], self.obst_rad]))
+        self.high_state = np.array([self.region[1], self.region[3], self.max_vel, self.max_vel, self.goal_reg[1], self.goal_reg[3], self.goal_rad])
+        for i in xrange(self.num_obsts):
+            self.high_state = np.append(self.high_state, np.array([self.obst_reg[1], self.obst_reg[3], self.obst_rad]))
 
         self.min_action = np.tile([self.min_fmag, self.min_fdir], 4)
         self.max_action = np.tile([self.max_fmag, self.max_fdir], 4)       
@@ -79,18 +91,41 @@ class ObjectTransitionV3Env(gym.Env):
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
-    
+
+    def _reset(self):
+        #self.state = np.array([self.np_random.uniform(low=0, high=30), self.np_random.uniform(low=0, high=40)])
+        #self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
+        self.state = np.array([self.np_random.uniform(low=self.pos_reg[0], high=self.pos_reg[1]), 0.0, \
+            self.np_random.uniform(low=self.pos_reg[2], high=self.pos_reg[3]), 0.0])
+        self.goal = np.array([self.np_random.uniform(low=self.goal_reg[0]+self.goal_rad, high=self.goal_reg[1]-self.goal_rad), \
+            self.np_random.uniform(low=self.goal_reg[2]+self.goal_rad, high=self.goal_reg[3]-self.goal_rad), self.goal_rad])
+        self.state = np.append(self.state,self.goal)
+        self.obstacles = []
+        for i in xrange(self.num_obsts):
+            obst = np.array([self.np_random.uniform(low=self.obst_reg[0], high=self.obst_reg[1]), \
+                self.np_random.uniform(low=self.obst_reg[2], high=self.obst_reg[3]), self.obst_rad])
+            self.obstacles.append(obst)
+            self.state = np.append(self.state, obst)
+        
+        return np.array(self.state)
+
     def _set_state(self, state):
         self.state = np.array(state)
+
+    def _get_state(self):
+        return self.state
+
+    def _configure(self, info):
+        self._set_state(info['state'])
 
     def _step(self, raw_action):
         # raw_action = [f1_mag, f1_theta, f2_mag, f2_theta, ...]
         #print self.state
         action = np.clip(raw_action, self.min_action, self.max_action)
         self.action = action
-        position = [self.state[0], self.state[2]]
+        position = [self.state[0], self.state[1]]
         #print("position=",position)
-        velocity = [self.state[1], self.state[3]]
+        velocity = [self.state[2], self.state[3]]
 
         ##### calculate the sum force from the robots
         f_x = 0.0 # sum force of the group in x direction
@@ -98,6 +133,7 @@ class ObjectTransitionV3Env(gym.Env):
         for i in range(self.agent_num):
             f_x += action[2*i] * math.cos(action[2*i+1])
             f_y += action[2*i] * math.sin(action[2*i+1])
+
 
         f_sig = math.sqrt(math.pow(f_x, 2) + math.pow(f_y, 2)) # magnitude of the robot force
 
@@ -130,12 +166,13 @@ class ObjectTransitionV3Env(gym.Env):
         position[1] = position[1] + velocity[1] * self.dT
 
         ##### check goal and assign rewards
-        is_in_goal = _isIn(position, self.goal)
+        is_in_goal = _isInCircle(position, self.goal)
         is_in_obstacles = False
         for obstacle in self.obstacles:
-            if _isIn(position, obstacle) is True:
+            if _isInCircle(position, obstacle) is True:
                 is_in_obstacles = True
                 break
+        if is_in_goal: is_in_obstacles = False
 
         if (position[0] < self.region[0]): position[0] = self.region[0]
         if (position[0] > self.region[1]): position[0] = self.region[1]
@@ -144,9 +181,9 @@ class ObjectTransitionV3Env(gym.Env):
 
         done = (is_in_goal and _norm(velocity) < 0.5) #or is_in_obstacles
     
-        goal_x = (self.goal[0]+self.goal[1])/2
-        goal_y = (self.goal[2]+self.goal[3])/2
-        dist1 = _distance([self.state[0],self.state[2]], [goal_x, goal_y])
+        goal_x = self.goal[0]
+        goal_y = self.goal[1]
+        dist1 = _distance([self.state[0],self.state[1]], [goal_x, goal_y])
         dist2 = _distance(position, [goal_x, goal_y])
 
         #reward = 0
@@ -160,38 +197,11 @@ class ObjectTransitionV3Env(gym.Env):
         
         if dist1 - dist2 <= 0.05: reward -= 1 #dese reward
 
-        # reward = -1 #-1
-        # if is_in_goal:
-        #     reward += 10.0
-        # if is_in_obstacles:
-        #     reward -= 200.0
-        # if done and (not is_in_obstacles):
-        #     reward += 200.0
-        # #reward += np.sign(dist1 - dist2)
-        # if dist1 - dist2 >= 0.01: reward += 2
-        # if dist1 - dist2 >= 0.1: reward += 1
-
-
         #if reward == 0.0: reward = -1
         #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
 
-        self.state = np.array([position[0], velocity[0], position[1], velocity[1]])
+        self.state[0:4] = np.array([position[0], position[1], velocity[0], velocity[1]])
         return self.state, reward, done, {"done":done}
-
-    def _reset(self):
-        #self.state = np.array([self.np_random.uniform(low=0, high=30), self.np_random.uniform(low=0, high=40)])
-        #self.state = np.array([self.np_random.uniform(low=50, high=70), self.np_random.uniform(low=0, high=40)])
-        self.state = np.array([self.np_random.uniform(low=self.pos_reg[0], high=self.pos_reg[1]), 0.0, self.np_random.uniform(low=self.pos_reg[2], high=self.pos_reg[3]), 0.0])
-        return np.array(self.state)
-
-    def _set_state(self, init_state):
-        self.state = np.array(init_state)
-
-    def _get_state(self):
-        return self.state
-
-    def _configure(self, info):
-        self._set_state(info['state'])
 
     def _render(self, mode='human', close=False):
         if close:
@@ -214,21 +224,27 @@ class ObjectTransitionV3Env(gym.Env):
             from gym.envs.classic_control import rendering
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
-            self.objtrans = rendering.Transform()
-
+            #render obstacles
             self.render_obsts = []
+            self.obsts_trans_list = []
             for obstacle in self.obstacles:
-                l,r,t,b = obstacle[0]*scale, obstacle[1]*scale, obstacle[2]*scale, obstacle[3]*scale
-                render_obst = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
-                render_obst.set_color(0,0,0)
-                self.viewer.add_geom(render_obst)
-                self.render_obsts.append(render_obst)
+                obst_trans = rendering.Transform()
+                obst = rendering.make_circle(obstacle[2]*scale)
+                obst.add_attr(obst_trans)
+                obst.set_color(0,0,0)
+                self.viewer.add_geom(obst)
+                self.obsts_trans_list.append(obst_trans)
+                self.render_obsts.append(obst)
+            
+            #render goal
+            self.goal_trans = rendering.Transform()
+            self.goal_ren = rendering.make_circle(self.goal[2]*scale)
+            self.goal_ren.add_attr(self.goal_trans)
+            self.goal_ren.set_color(0,255,0)
+            self.viewer.add_geom(self.goal_ren)
+            #print("goal[0]={} goal[1]={}".format(self.goal[0],self.goal[1]))
 
-            l,r,t,b = self.goal[0]*scale, self.goal[1]*scale, self.goal[2]*scale, self.goal[3]*scale
-            self.goal_reg = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])
-            self.goal_reg.set_color(0,255,0)
-            self.viewer.add_geom(self.goal_reg)
-
+            #render arrows
             fname = path.join(path.dirname(__file__), "assets/arrow.png")
             self.img_list = []
             self.imgtrans_list = []
@@ -241,6 +257,7 @@ class ObjectTransitionV3Env(gym.Env):
                 self.imgtrans_list.append(imgtrans)
             #print("self.img_list={}, self.imgtrans_list={}".format(self.img_list,self.imgtrans_list))
 
+            self.objtrans = rendering.Transform()
             l,r,t,b = -objwidth/2, objwidth/2, -objheight/2, objheight/2
             self.obj = rendering.FilledPolygon([(l,b), (l,t), (r,t), (r,b)])            
             self.obj.add_attr(self.objtrans)
@@ -257,12 +274,16 @@ class ObjectTransitionV3Env(gym.Env):
         for id in xrange(self.agent_num):
             self.viewer.add_onetime(self.img_list[id])
             self.imgtrans_list[id].set_translation(self.state[0]*scale+self.arrow_offsets[id][0],\
-                self.state[2]*scale+self.arrow_offsets[id][1]) #follow object #arrow vis V1
+                self.state[1]*scale+self.arrow_offsets[id][1]) #follow object #arrow vis V1
             #self.imgtrans_list[id].set_translation(self.state[0]*scale,self.state[2]*scale) #arrow vis V2, follow object
             #self.imgtrans_list[id].set_translation(100+60*id, 200) #arrow vis V3, fixed position
             self.imgtrans_list[id].set_rotation(self.rotations[id]) # rotation
             self.imgtrans_list[id].scale = (self.scales[id],self.scales[id])
         
-        self.objtrans.set_translation(self.state[0]*scale, self.state[2]*scale)
+        for i, obst_trans in enumerate(self.obsts_trans_list):
+            obst_trans.set_translation(self.obstacles[i][0]*scale,self.obstacles[i][1]*scale)
+        self.goal_trans.set_translation(self.goal[0]*scale,self.goal[1]*scale)
+        self.objtrans.set_translation(self.state[0]*scale, self.state[1]*scale)
+        #self.objtrans.set_translation(100, 200)
         
         return self.viewer.render(return_rgb_array = mode=='rgb_array')

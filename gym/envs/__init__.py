@@ -120,6 +120,18 @@ register(
     max_episode_steps=300,
 )
 
+register(
+    id='DynamicObjectTransition-v1',
+    entry_point='gym.envs.classic_control:DynamicObjectTransitionV1Env',
+    max_episode_steps=300,
+)
+
+register(
+    id='DynamicObjectTransition-v2',
+    entry_point='gym.envs.classic_control:DynamicObjectTransitionV2Env',
+    max_episode_steps=300,
+)
+
 # Box2d
 # ----------------------------------------
 

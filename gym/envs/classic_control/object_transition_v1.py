@@ -47,9 +47,9 @@ class ObjectTransitionV1Env(gym.Env):
         # size
         self.region = [0, 80/2, 0, 40/2] # l,r,b,u
         self.goal = [60/2, 70/2, 15/2, 25/2]
-        # self.pos_reg = [0, 30/2, 0, 40/2]
-        self.pos_reg = [0, 80/2, 0, 40/2]
-        # self.pos_reg = [40/2+1, 40/2+1, 15/2+1, 15/2+1]
+        self.pos_reg = [0, 30/2, 0, 40/2] #left init
+        # self.pos_reg = [0, 80/2, 0, 40/2] #global init
+        # self.pos_reg = [40/2-1, 40/2-1, 10, 10] # test
         self.obstacles = []
         self.obstacles.append([40/2, 50/2, 15/2, 25/2])
 
@@ -149,16 +149,17 @@ class ObjectTransitionV1Env(gym.Env):
         dist1 = _distance([self.state[0],self.state[2]], [goal_x, goal_y])
         dist2 = _distance(position, [goal_x, goal_y])
 
-        reward = -1
+        reward = 0.
+        reward -= 1.
         if is_in_goal:
             reward += 2.0
         if is_in_obstacles:
-            reward -= 100.0
+            reward = -100.0
         if done and (not is_in_obstacles):
-            reward += 100.0
+            reward = 100.0
         #reward += np.sign(dist1 - dist2)
         if dist1 - dist2 <= 0.01: reward -= 1
-
+        #reward /= 10
 
         # reward = -1 #-1
         # if is_in_goal:
