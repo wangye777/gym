@@ -65,6 +65,13 @@ register(
 )
 
 register(
+    id='DynamicCartPole-v0',
+    entry_point='gym.envs.classic_control:DynamicCartPoleEnv',
+    max_episode_steps=500,
+    reward_threshold=475.0,
+)
+
+register(
     id='MountainCar-v0',
     entry_point='gym.envs.classic_control:MountainCarEnv',
     max_episode_steps=200,
@@ -129,7 +136,13 @@ register(
 register(
     id='DynamicObjectTransition-v2',
     entry_point='gym.envs.classic_control:DynamicObjectTransitionV2Env',
-    max_episode_steps=300,
+    max_episode_steps=500,
+)
+
+register(
+    id='DynamicObjectTransition-v3',
+    entry_point='gym.envs.classic_control:DynamicObjectTransitionV3Env',
+    max_episode_steps=500,
 )
 
 # Box2d

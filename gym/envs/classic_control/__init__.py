@@ -1,4 +1,5 @@
 from gym.envs.classic_control.cartpole import CartPoleEnv
+from gym.envs.classic_control.dynamic_cartpole import DynamicCartPoleEnv
 from gym.envs.classic_control.mountain_car import MountainCarEnv
 from gym.envs.classic_control.continuous_mountain_car import Continuous_MountainCarEnv
 from gym.envs.classic_control.pendulum import PendulumEnv
@@ -10,3 +11,4 @@ from gym.envs.classic_control.object_transition_v3 import ObjectTransitionV3Env
 from gym.envs.classic_control.object_transition_v4 import ObjectTransitionV4Env
 from gym.envs.classic_control.dynamic_object_transition_v1 import DynamicObjectTransitionV1Env
 from gym.envs.classic_control.dynamic_object_transition_v2 import DynamicObjectTransitionV2Env
+from gym.envs.classic_control.dynamic_object_transition_v3 import DynamicObjectTransitionV3Env

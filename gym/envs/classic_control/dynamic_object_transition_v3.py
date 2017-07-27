@@ -1,4 +1,4 @@
-# agent applies force in 8 different directions
+# no dynamics
 
 import math
 import gym
@@ -25,7 +25,7 @@ def _distance(pos1, pos2):
 def _norm(vec):
     return np.linalg.norm(vec,2)
 
-class DynamicObjectTransitionV2Env(gym.Env):
+class DynamicObjectTransitionV3Env(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 30
@@ -36,8 +36,6 @@ class DynamicObjectTransitionV2Env(gym.Env):
 
         #self.min_f = -1.0
         #self.max_f = 1.0
-        self.min_fmag = 0
-        self.max_fmag = 1.0
         self.min_fdir = 0.0
         self.max_fdir = 2*math.pi - 0.01
         self.max_vel = 10.0 # max velocity of the object
@@ -56,11 +54,11 @@ class DynamicObjectTransitionV2Env(gym.Env):
         self.region = [0, 100/2, 0, 100/2] # l,r,b,u
         self.pos_reg = [0, 100/2, 0, 100/2]
         self.goal_reg = [10/2, 90/2, 10/2, 90/2]
-        #self.goal_reg = [50/2-0.1, 50/2+0.1, 50/2-0.1, 50/2+0.1]
-        self.goal_rad = 10/2
-        self.num_obsts = 2 #6
+        # self.goal_reg = [50/2-0.1, 50/2+0.1, 50/2-0.1, 50/2+0.1]
+        self.goal_rad = 10./2
+        self.num_obsts = 6 #6
         self.obst_reg = [0, 100/2, 0, 100/2]
-        self.obst_rad = 6/2
+        self.obst_rad = 6./2
         
 
         self.friction = 0.8
@@ -74,17 +72,17 @@ class DynamicObjectTransitionV2Env(gym.Env):
         for i in xrange(self.num_obsts):
             self.high_state = np.append(self.high_state, np.array([self.region[1], self.region[3], 20.]))
 
-        self.agent_num = 4
+        self.agent_num = 1
 
-        self.min_action = np.tile([self.min_fmag, self.min_fdir], self.agent_num)
-        self.max_action = np.tile([self.max_fmag, self.max_fdir], self.agent_num)       
+        self.min_action = np.tile([-self.max_vel, -self.max_vel], self.agent_num)
+        self.max_action = np.tile([self.max_vel, self.max_vel], self.agent_num)  
 
         self.viewer = None
 
         self.observation_space = spaces.Box(self.low_state, self.high_state)
         self.action_space = spaces.Box(self.min_action, self.max_action)
 
-        self.action = np.zeros([8])
+        self.action = np.zeros([self.agent_num * self.action_space.shape[0]])
 
         self._seed()
         self._reset()
@@ -133,48 +131,11 @@ class DynamicObjectTransitionV2Env(gym.Env):
 
     def _step(self, raw_action):
         # raw_action = [f1_mag, f1_theta, f2_mag, f2_theta, ...]
-        #print self.state
         action = np.clip(raw_action, self.min_action, self.max_action)
         self.action = action
         position = [self.state[0], self.state[1]]
-        #print("position=",position)
-        velocity = [self.state[2], self.state[3]]
+        velocity = [self.action[0], self.action[1]]
 
-        ##### calculate the sum force from the robots
-        f_x = 0.0 # sum force of the group in x direction
-        f_y = 0.0
-        for i in range(self.agent_num):
-            f_x += action[2*i] * math.cos(action[2*i+1])
-            f_y += action[2*i] * math.sin(action[2*i+1])
-
-
-        f_sig = math.sqrt(math.pow(f_x, 2) + math.pow(f_y, 2)) # magnitude of the robot force
-
-        ##### deal with planar object dynamics
-        if ( (f_sig <= self.friction) and (_norm(velocity) <= 0.1) ):
-            # object is stationary and the input force is smaller than the friction
-            velocity[0] = 0.0
-            velocity[1] = 0.0
-            # position doesn't change
-        elif( (f_sig > self.friction) and (_norm(velocity) <= 0.1) ):
-            # object is stationary, but input force is larger than friction
-            # in this case, friction has the opposite direction to the input force
-            friction_x = - self.friction * f_x / _norm(np.array([f_x, f_y])) # friction force has negative direction w.r.t. object velocity
-            friction_y = - self.friction * f_y / _norm(np.array([f_x, f_y]))
-            fsum_x = f_x + friction_x # sum force by combining robot forces and friction
-            fsum_y = f_y + friction_y   
-            #print("not moving fsum_x={} fsum_y={}".format(fsum_x,fsum_y))
-            velocity[0] = velocity[0] + fsum_x / self.mass * self.dT
-            velocity[1] = velocity[1] + fsum_y / self.mass * self.dT
-        else:
-            # in all other cases, friction has the opposite direction to the velocity
-            friction_x = - self.friction * velocity[0] / _norm(velocity) # friction force has negative direction w.r.t. object velocity
-            friction_y = - self.friction * velocity[1] / _norm(velocity)
-            fsum_x = f_x + friction_x # sum force by combining robot forces and friction
-            fsum_y = f_y + friction_y
-            #print("moving fsum_x={} fsum_y={}".format(fsum_x,fsum_y))
-            velocity[0] = velocity[0] + fsum_x / self.mass * self.dT
-            velocity[1] = velocity[1] + fsum_y / self.mass * self.dT
         position[0] = position[0] + velocity[0] * self.dT
         position[1] = position[1] + velocity[1] * self.dT
 
@@ -192,7 +153,7 @@ class DynamicObjectTransitionV2Env(gym.Env):
         if (position[1] < self.region[2]): position[1] = self.region[2]
         if (position[1] > self.region[3]): position[1] = self.region[3]        
 
-        done = (is_in_goal and _norm(velocity) < 0.5) #or is_in_obstacles
+        done = (is_in_goal and _norm(velocity) < 6) #or is_in_obstacles
     
         goal_x = self.goal[0]
         goal_y = self.goal[1]
@@ -202,17 +163,12 @@ class DynamicObjectTransitionV2Env(gym.Env):
         #reward = 0
         reward = -1
         if dist1 - dist2 <= 0.05: reward -= 1 #dese reward
-
         if is_in_goal:
-            reward = 0.0
+            reward = 1.0
         if is_in_obstacles:
             reward = -5.0
         if done and (not is_in_obstacles):
             reward = 5
-
-
-        #if reward == 0.0: reward = -1
-        #print("\naction={}, f_sig={}, reward={}, dist1={}, dist2={}".format(action, f_sig, reward, dist1, dist2))
 
         self.state[0:4] = np.array([position[0], position[1], velocity[0], velocity[1]])
 
@@ -257,20 +213,6 @@ class DynamicObjectTransitionV2Env(gym.Env):
             self.goal_ren.add_attr(self.goal_trans)
             self.goal_ren.set_color(0,255,0)
             self.viewer.add_geom(self.goal_ren)
-            #print("goal[0]={} goal[1]={}".format(self.goal[0],self.goal[1]))
-
-            #render arrows
-            fname = path.join(path.dirname(__file__), "assets/arrow.png")
-            self.img_list = []
-            self.imgtrans_list = []
-            for id in xrange(self.agent_num):
-                img = rendering.Image(fname, 20., 40.)
-                #print("img={}".format(img))
-                imgtrans = rendering.Transform()
-                img.add_attr(imgtrans)
-                self.img_list.append(img)
-                self.imgtrans_list.append(imgtrans)
-            #print("self.img_list={}, self.imgtrans_list={}".format(self.img_list,self.imgtrans_list))
 
             self.objtrans = rendering.Transform()
             l,r,t,b = -objwidth/2, objwidth/2, -objheight/2, objheight/2
@@ -279,21 +221,6 @@ class DynamicObjectTransitionV2Env(gym.Env):
             self.obj.set_color(255,0,0)
             self.viewer.add_geom(self.obj)
 
-        self.scales = []
-        self.rotations = []
-        for id in xrange(self.agent_num):
-            self.scales.append(np.abs(self.action[id*2]))
-            self.rotations.append(self.action[id*2+1]-math.pi/2) #anti-clockwise
-        self.arrow_offsets = [[30,0],[0,-30],[-30,0],[0,30]] * scale
-        
-        for id in xrange(self.agent_num):
-            self.viewer.add_onetime(self.img_list[id])
-            self.imgtrans_list[id].set_translation(self.state[0]*scale+self.arrow_offsets[id][0],\
-                self.state[1]*scale+self.arrow_offsets[id][1]) #follow object #arrow vis V1
-            #self.imgtrans_list[id].set_translation(self.state[0]*scale,self.state[2]*scale) #arrow vis V2, follow object
-            #self.imgtrans_list[id].set_translation(100+60*id, 200) #arrow vis V3, fixed position
-            self.imgtrans_list[id].set_rotation(self.rotations[id]) # rotation
-            self.imgtrans_list[id].scale = (self.scales[id],self.scales[id])
         
         for i, obst_trans in enumerate(self.obsts_trans_list):
             obst_trans.set_translation(self.obstacles[i][0]*scale,self.obstacles[i][1]*scale)
